@@ -1,7 +1,6 @@
 .data 
  maze: .byte 1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,1,0,1,1,0,1,0,0,0,0,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,1
- welcome_str: .asciiz "Welcome to the MIPS maze solver!"
- instruction_str: .asciiz "\nEnter a direction: R for right, L for left, F for forward, and B for backward:\n"
+ welcome_str: .asciiz "Welcome to the MIPS maze solver!\nEnter a direction: R for right, L for left, F for forward, and B for backward:\n"
  mistake_str: .asciiz "\nInvalid move, there is a wall in that direction! Try again... \n"
  invalid_str: .asciiz "\nInvalid input, please re-enter\n"
  end_str: .asciiz "\nCongratulations! You reached the exit!"
@@ -28,10 +27,6 @@ main:
  # Print welcome string
  addi $v0, $0, 4
  la $a0, welcome_str
- syscall
- 
- addi $v0, $0, 4
- la $a0, instruction_str
  syscall
  
  j input
@@ -81,12 +76,14 @@ move_backward:
  j check_move
 
 check_move:
- # Get the offset based temp column and row
+ # Calculate an offset to the beginning of the maze based on the temp cells
+ # That is, get the location of a the potential wall in the way of that move
  mult $t6, $s1
  mflo $t8
  add $t8, $t8, $t7
  
- # Load that cell from the maze, if 0, is a valid move and go to check winner
+ # Load that cell from the maze, if 0, there is no wall in the way
+ # If so, it is a valid move, which is handled in check winner
  lb $t9, maze($t8) 
  beqz $t9, check_win
  
@@ -95,10 +92,10 @@ check_move:
  la $a0, mistake_str
  syscall
  
- addi $s7, $s7, 1 # add one to moves counter
+ addi $s7, $s7, 1 # add one to mistakes counter
  j input
    
-# Stores the target cell as the current cell
+# Updates the current location with the move's target cell
 # Then checks if they land outside the maze, if so, winner!
 check_win:
  add $s3, $0, $a1
@@ -107,6 +104,7 @@ check_win:
  beq $s4, $s1, end
  j input
 
+# If they get to the end, print output strings
 end:
  addi $v0, $0, 4
  la $a0, end_str
