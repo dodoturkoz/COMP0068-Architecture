@@ -1,7 +1,7 @@
 .data 
  maze: .byte 1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,1,0,1,1,0,1,0,0,0,0,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,1
  welcome_str: .asciiz "Welcome to the MIPS maze solver!\nEnter a direction: R for right, L for left, F for forward, and B for backward:\n"
- mistake_str: .asciiz "\nInvalid move, there is a wall in that direction! Try again... \n"
+ mistake_str: .asciiz "\nInvalid move! Try again... \n"
  invalid_str: .asciiz "\nInvalid input, please re-enter\n"
  end_str: .asciiz "\nCongratulations! You reached the exit!"
  moves_count_str: .asciiz "\nTotal number of moves: "
@@ -12,10 +12,11 @@
 
 main:
  la $s0, maze # We will keep the maze location in s0
- add $s1, $0, 11 # s1 stores the number of cols
- add $s2, $0, 13 # s2 the number of rows
- add $s3, $0, 1 # s3 the value of the current row
- add $s4, $0, -1 # s4 the value of the current col
+ addi $s1, $0, 11 # s1 stores the number of cols
+ addi $s2, $0, 13 # s2 the number of rows
+ addi $s3, $0, 1 # s3 the value of the current row
+ addi $s4, $0, -1 # s4 the value of the current col
+ add $s5, $0, $0 # s5 will store the "moves counter" (Half steps start at 1, full steps start at 0)
  add $s6, $0, $0 # s6 the number of moves
  add $s7, $0, $0 # s7 the number of mistakes
  
@@ -23,6 +24,7 @@ main:
  addi $t2, $0, 0x4c # L in t2
  addi $t3, $0, 0x46 # F in t3
  addi $t4, $0, 0x42 # B in t4 
+ add $t5, $0, $0 # Ensure $t5 is empty to use as valid move storage
  
  # Print welcome string
  addi $v0, $0, 4
@@ -37,7 +39,18 @@ input:
  syscall
  
  addi $s6, $s6, 1 # add one to moves counter
-
+ j check_limited_move
+ 
+check_limited_move:
+ # If the valid move storage is empty, they can move
+ beqz $t5, move_robot
+ # If the move if the only valid move, also continue movement
+ beq $v0, $t5, move_robot
+ # Else, print invalid move message
+ j invalid_move
+ 
+# Check where the robot needs to move 
+move_robot:
  beq $v0, $t1, move_right
  beq $v0, $t2, move_left
  beq $v0, $t3, move_forward
@@ -48,46 +61,57 @@ input:
  syscall
  j input
  
-# In the set of moves, $a1 and $a2 represent the target cell
-# while $t6 and $t7 represent the potential wall cell they would need to go through
+# Moves one cell in the defined direction and stores the opposite in only valid move
 move_left:
- addi $a1, $s3, 2
- addi $a2, $s4, 0
- addi $t6, $s3, 1
- addi $t7, $s4, 0
+ addi $s3, $s3, 1
+ addi $s4, $s4, 0
+ addi $t5, $0, 0x52
  j check_move
 move_right:
- addi $a1, $s3, -2
- addi $a2, $s4, 0
- addi $t6, $s3, -1
- addi $t7, $s4, 0
+ addi $s3, $s3, -1
+ addi $s4, $s4, 0
+ addi $t5, $0, 0x4c
  j check_move
 move_forward:
- addi $a1, $s3, 0
- addi $a2, $s4, 2
- addi $t6, $s3, 0
- addi $t7, $s4, 1
+ addi $s3, $s3, 0
+ addi $s4, $s4, 1
+ addi $t5, $0, 0x42
  j check_move
 move_backward:
- addi $a1, $s3, 0
- addi $a2, $s4, -2
- addi $t6, $s3, 0
- addi $t7, $s4, -1
+ addi $s3, $s3, 0
+ addi $s4, $s4, -1
+ addi $t5, $0, 0x46
  j check_move
+ 
+get_crr_position_val:
+ # Calculate crr cell value as offset to the beginning of the maze based
+ mult $s3, $s1
+ mflo $t8
+ add $t8, $t8, $s4
+ 
+ # Load that cell from the maze, if 1, we robor is standing on a wall
+ lb $t9, maze($t8)
+ jr $ra
 
 check_move:
- # Calculate an offset to the beginning of the maze based on the temp cells
- # That is, get the location of a the potential wall in the way of that move
- mult $t6, $s1
- mflo $t8
- add $t8, $t8, $t7
- 
- # Load that cell from the maze, if 0, there is no wall in the way
- # If so, it is a valid move, which is handled in check winner
- lb $t9, maze($t8) 
- beqz $t9, check_win
- 
- # Else, tell them is an invalid move, increase wall hit counter and go back to input 
+ # check if the current position is valid
+ jal get_crr_position_val
+ # if the current position is a wall, go to invalid move
+ beq $t9, 1, invalid_move
+ # if the current position is empty, check if this is the second move
+ # if so, go to check if the user won
+ beq $s5, 1, check_win
+ # else, this must be the first move, so repeat the move to move two spaces
+ # but update the move counter so the next step goes to check winner
+ addi $s5, $s5, 1
+ j move_robot
+
+invalid_move:
+ # Make sure the next step is a half step
+ addi $s5, $0, 1
+
+ # Tell user move is invalid, increase wall hit counter and go back to input
+ # Note that the user will only be able to move in the opposite direction
  addi $v0, $0, 4
  la $a0, mistake_str
  syscall
@@ -95,11 +119,12 @@ check_move:
  addi $s7, $s7, 1 # add one to mistakes counter
  j input
    
-# Updates the current location with the move's target cell
+# Next step can be a full step again, so reset move counter as 0
+# Also make sure valid move register is empty so the user can do anything again
 # Then checks if they land outside the maze, if so, winner!
 check_win:
- add $s3, $0, $a1
- add $s4, $0, $a2
+ add $s5, $0, $0
+ add $t5, $0, $0
  beq $s3, $s2, end
  beq $s4, $s1, end
  j input
