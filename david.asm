@@ -1,12 +1,13 @@
 .data 
  maze: .byte 1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,1,0,1,1,0,1,0,0,0,0,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,1
  welcome_str: .asciiz "Welcome to the MIPS maze solver!\nEnter a direction: R for right, L for left, F for forward, and B for backward:\n"
- mistake_str: .asciiz "\nInvalid move! Try again... \n"
- invalid_str: .asciiz "\nInvalid input, please re-enter\n"
- end_str: .asciiz "\nCongratulations! You reached the exit!"
+ mistake_str: .asciiz "Invalid move! Try again... \n"
+ invalid_str: .asciiz "Invalid input, please re-enter\n"
+ end_str: .asciiz "Congratulations! You reached the exit!"
  moves_count_str: .asciiz "\nTotal number of moves: "
  mistakes_count_str: .asciiz "\nNumber of mistakes: "
-
+ user_input: .space 3 # 3 spaces, one for the char, one for enter, one for null
+ 
 .text
 .globl main
 
@@ -15,8 +16,8 @@ main:
  addi $s1, $0, 11 # s1 stores the number of cols
  addi $s2, $0, 13 # s2 the number of rows
  addi $s3, $0, 1 # s3 the value of the current row
- addi $s4, $0, -1 # s4 the value of the current col
- add $s5, $0, $0 # s5 will store the "moves counter" (Half steps start at 1, full steps start at 0)
+ addi $s4, $0, 0 # s4 the value of the current col
+ add $s5, $0, 1 # s5 will store the "moves counter" (Half steps start at 1, full steps start at 0)
  add $s6, $0, $0 # s6 the number of moves
  add $s7, $0, $0 # s7 the number of mistakes
  
@@ -34,9 +35,12 @@ main:
  j input
  
 input:
- # Receive input
- addi $v0, $0, 12
+ # Receive input as string (so they can hit enter after)
+ addi $v0, $0, 8
+ la $a0, user_input
+ addi $a1, $0, 3
  syscall
+ lb $t6, user_input # store the user input at $t6
  
  addi $s6, $s6, 1 # add one to moves counter
  j check_limited_move
@@ -45,16 +49,16 @@ check_limited_move:
  # If the valid move storage is empty, they can move
  beqz $t5, move_robot
  # If the move if the only valid move, also continue movement
- beq $v0, $t5, move_robot
+ beq $t6, $t5, move_robot
  # Else, print invalid move message
  j invalid_move
  
 # Check where the robot needs to move 
 move_robot:
- beq $v0, $t1, move_right
- beq $v0, $t2, move_left
- beq $v0, $t3, move_forward
- beq $v0, $t4, move_backward
+ beq $t6, $t1, move_right
+ beq $t6, $t2, move_left
+ beq $t6, $t3, move_forward
+ beq $t6, $t4, move_backward
  
  addi $v0, $0, 4
  la $a0, invalid_str
