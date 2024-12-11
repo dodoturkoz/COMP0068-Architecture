@@ -100,7 +100,7 @@ get_crr_position_val:
  mflo $t8
  add $t8, $t8, $s4
  
- # Load that cell from the maze, if 1, we robor is standing on a wall
+ # Load that cell from the maze, if 1, we robot is standing on a wall
  lb $t9, maze($t8)
  jr $ra
 
@@ -130,15 +130,19 @@ invalid_move:
  addi $s7, $s7, 1 # add one to mistakes counter
  j input
    
-# Next step can be a full step again, so reset move counter as 0
-# Also make sure valid move register is empty so the user can do anything again
+# Make sure valid move register is empty so the user can do anything again
 # Then checks if they land outside the maze, if so, winner!
+# Finally, allows a new full step, except if the current column is 0
+# This handles errors in the first movement
 check_win:
- add $s5, $0, $0
  add $t5, $0, $0
  beq $s3, $s2, end
  beq $s4, $s1, end
+ beqz $s4, go_to_input
+ add $s5, $0, $0
+go_to_input:
  j input
+
 
 # If they get to the end, print output strings
 end:
