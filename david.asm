@@ -1,5 +1,6 @@
-.data 
- maze: .byte 1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,1,0,1,1,0,1,0,0,0,0,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,1
+.data
+ # Note that the maze is only open on the exit, the starting point is defined in code but "closed" to avoid someone winning by going back through the entrance
+ maze: .byte 1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,1,0,1,1,0,1,0,0,0,0,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,1
  welcome_str: .asciiz "Welcome to the MIPS maze solver!\nEnter a direction: R for right, L for left, F for forward, and B for backward:\n"
  welcome_note: .asciiz "Note: to input a command, write a letter and then press enter to confirm.\n" 
  mistake_str: .asciiz "Invalid move! Try again... \n"
@@ -16,8 +17,8 @@ main:
  la $s0, maze # We will keep the maze location in s0
  addi $s1, $0, 11 # s1 stores the number of cols
  addi $s2, $0, 13 # s2 the number of rows
- addi $s3, $0, 1 # s3 the value of the current row
- addi $s4, $0, 0 # s4 the value of the current col
+ addi $s3, $0, 1 # s3 the value of the current row, note this defines the starting point
+ addi $s4, $0, 0 # s4 the value of the current col, note this defines the starting point
  add $s5, $0, 1 # s5 will store the "moves counter" (Half steps start at 1, full steps start at 0)
  add $s6, $0, $0 # s6 the number of moves
  add $s7, $0, $0 # s7 the number of mistakes
