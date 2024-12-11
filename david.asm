@@ -27,7 +27,7 @@ main:
  addi $t2, $0, 0x4c # L in t2
  addi $t3, $0, 0x46 # F in t3
  addi $t4, $0, 0x42 # B in t4 
- add $t5, $0, $0 # Ensure $t5 is empty to use as valid move storage
+ addi $t5, $0, 0x46 # t5 is the valid move storage, initially you can only go F
  
  # Print welcome string
  addi $v0, $0, 4
@@ -132,13 +132,15 @@ invalid_move:
  j input
    
 # Make sure valid move register is empty so the user can do anything again
-# Then checks if they land outside the maze, if so, winner!
+# Then checks if they land outside the maze (get to the length ot to zero), if so, winner!
 # Finally, allows a new full step, except if the current column is 0
 # This handles errors in the first movement
 check_win:
  add $t5, $0, $0
  beq $s3, $s2, end
+ beq $s3, $0, end
  beq $s4, $s1, end
+ beq $s4, $0, end
  beqz $s4, go_to_input
  add $s5, $0, $0
 go_to_input:
