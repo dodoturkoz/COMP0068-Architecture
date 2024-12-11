@@ -1,6 +1,7 @@
 .data 
  maze: .byte 1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,1,0,1,1,0,1,0,0,0,0,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,1
  welcome_str: .asciiz "Welcome to the MIPS maze solver!\nEnter a direction: R for right, L for left, F for forward, and B for backward:\n"
+ welcome_note: .asciiz "Note: to input a command, write a letter and then press enter to confirm.\n" 
  mistake_str: .asciiz "Invalid move! Try again... \n"
  invalid_str: .asciiz "Invalid input, please re-enter\n"
  end_str: .asciiz "Congratulations! You reached the exit!"
@@ -30,6 +31,11 @@ main:
  # Print welcome string
  addi $v0, $0, 4
  la $a0, welcome_str
+ syscall
+
+ # Print the note
+ addi $v0, $0, 4
+ la $a0, welcome_note
  syscall
  
  j input
@@ -140,6 +146,7 @@ end:
  la $a0, end_str
  syscall
  
+ # NOTE TO EXAMINER: We are showing the total movements first as we feel its more natural
  addi $v0, $0, 4
  la $a0, moves_count_str
  syscall
