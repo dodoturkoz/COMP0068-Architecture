@@ -35,7 +35,8 @@ main:
  j input
  
 input:
- # Receive input as string (so they can hit enter after)
+ # Receive input as string 
+ # NOTE TO EXAMINER: We are assuming the user types the input and hits Enter for each move
  addi $v0, $0, 8
  la $a0, user_input
  addi $a1, $0, 3
