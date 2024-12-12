@@ -150,21 +150,20 @@ end:
  la $a0, end_str
  syscall
  
- # NOTE TO EXAMINER: We are showing the total movements first as we feel its more natural
- addi $v0, $0, 4
- la $a0, moves_count_str
- syscall
-
- addi $v0, $0, 1
- add $a0, $0, $s6
- syscall
-
  addi $v0, $0, 4
  la $a0, mistakes_count_str
  syscall
 
  addi $v0, $0, 1
  add $a0, $0, $s7
+ syscall
+
+  addi $v0, $0, 4
+ la $a0, moves_count_str
+ syscall
+
+ addi $v0, $0, 1
+ add $a0, $0, $s6
  syscall
 
  addi $v0, $0, 10
